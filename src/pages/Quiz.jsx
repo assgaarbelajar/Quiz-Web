@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./Quiz.css";
 import { fetchQuestions } from "../services/quizService";
-import {
-  addQuizHistory,
-  getCurrentUser,
-  getUserHistory,
-} from "../services/authService";
+import { getCurrentUser } from "../services/authService";
 
 function shuffleArray(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -31,8 +27,6 @@ function Quiz() {
   const [selected, setSelected] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [timeLeft, setTimeLeft] = useState(60);
-  const [history, setHistory] = useState([]);
-  const [resultSaved, setResultSaved] = useState(false);
 
   // Fetch soal
   const progressKey = currentUser
@@ -50,12 +44,6 @@ function Quiz() {
       setLoading(false);
     });
   };
-
-  useEffect(() => {
-    if (currentUser) {
-      setHistory(getUserHistory(currentUser));
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     const saved = localStorage.getItem(progressKey);
@@ -107,6 +95,7 @@ function Quiz() {
   }, [loading, isFinished, progressKey]);
 
   // Timer
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!started) return;
     if (timeLeft <= 0 || currentIndex >= questions.length) return;
@@ -119,6 +108,7 @@ function Quiz() {
   }, [timeLeft, currentIndex, questions.length]);
 
   // Ganti soal → shuffle opsi
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!questions[currentIndex]) return;
 
@@ -126,27 +116,7 @@ function Quiz() {
     setOptions(buildOptions(q));
     const existing = answers.find((a) => a.index === currentIndex);
     setSelected(existing ? existing.selected : null);
-  }, [currentIndex, questions, answers]);
-
-  useEffect(() => {
-    if (!isFinished) return;
-    if (resultSaved) return;
-    if (!currentUser) return;
-
-    const correct = answers.filter((a) => a.selected === a.correct).length;
-    const answered = answers.length;
-    const wrong = answered - correct;
-
-    const result = {
-      date: new Date().toLocaleString(),
-      total: questions.length,
-      correct,
-      wrong,
-    };
-    addQuizHistory(currentUser, result);
-    setHistory((prev) => [result, ...prev]);
-    setResultSaved(true);
-  }, [isFinished, resultSaved, currentUser, answers, questions.length]);
+  }, [currentIndex, questions]);
 
   // Intro
   if (!started) {
@@ -177,21 +147,6 @@ function Quiz() {
             Start Quiz
           </button>
 
-          {history.length > 0 && (
-            <div className="quiz-history">
-              <h3>Quiz History</h3>
-              <ul>
-                {history.map((item, idx) => (
-                  <li key={idx}>
-                    <span>{item.date}</span>
-                    <span>
-                      {item.correct}/{item.total} correct
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -253,29 +208,12 @@ function Quiz() {
               setSelected(null);
               setAnswers([]);
               setTimeLeft(60);
-              setResultSaved(false);
               setStarted(false);
               loadQuestions();
             }}
           >
             Restart Quiz
           </button>
-
-          {history.length > 0 && (
-            <div className="quiz-history">
-              <h3>Quiz History</h3>
-              <ul>
-                {history.map((item, idx) => (
-                  <li key={idx}>
-                    <span>{item.date}</span>
-                    <span>
-                      {item.correct}/{item.total} correct
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     );

@@ -8,7 +8,7 @@ export function getUsers() {
     const migrated = {};
     parsed.forEach((name) => {
       if (name && !migrated[name]) {
-        migrated[name] = { password: "", quizHistory: [] };
+        migrated[name] = { password: "" };
       }
     });
     return migrated;
@@ -47,7 +47,6 @@ export function signup(username, password) {
 
   users[cleanUser] = {
     password: cleanPass,
-    quizHistory: [],
   };
   setUsers(users);
 
@@ -84,17 +83,4 @@ export function logout() {
 
 export function getCurrentUser() {
   return localStorage.getItem(CURRENT_USER_KEY);
-}
-
-export function getUserHistory(username) {
-  const users = getUsers();
-  return users[username]?.quizHistory || [];
-}
-
-export function addQuizHistory(username, result) {
-  const users = getUsers();
-  if (!users[username]) return;
-  const history = users[username].quizHistory || [];
-  users[username].quizHistory = [result, ...history];
-  setUsers(users);
 }
